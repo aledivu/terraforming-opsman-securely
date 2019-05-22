@@ -200,3 +200,4 @@ output "services_subnet_cidrs" {
 
 output "services_subnet_gateways" {
   value = "${module.pks.services_subnet_gateways}"
+}

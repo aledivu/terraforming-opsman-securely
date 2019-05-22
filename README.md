@@ -55,7 +55,7 @@ Create an EC2 Jumpbox and associate the above created IAM Role. For this purpose
 
 ### Terraform CLI
 
-[SSH into your EC2] (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html)
+[SSH into your EC2](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html)
 
 ```bash
 sudo su
@@ -174,20 +174,21 @@ We have have other terraform templates:
 
 ## What do the terraform scripts create from the above repository?
 As part of deploying OpsMan for PKS, the above repo requires to create an IAM User with high permissions. This user is only used by terraform to access AWS, so this is not necessary if you run these terraform from a Jumpbox in AWS. If you do use a AWS IAM user, then make sure to rotate access key and secret key often as a good way to secure your AWS account.
-Moreover, these terraform scripts create an additional AWS IAM user with high permissions. This user is only created for the purpose of allowing AWS Management Console Config option of Using AWS Keys. Recommendation is to follow [Pivotal Network] (https://docs.pivotal.io/pivotalcf/2-5/om/aws/config-terraform.html) suggesting to Use AWS Instance Profile instead of the AWS IAM user above mentioned.
-This user is not used by any of the BOSH and PKS operations. 
+Moreover, these terraform scripts create an additional AWS IAM user with high permissions. This user is only created for the purpose of allowing AWS Management Console Config option of Using AWS Keys. Recommendation is to follow [Pivotal Network](https://docs.pivotal.io/pivotalcf/2-5/om/aws/config-terraform.html) suggesting to Use AWS Instance Profile instead of the AWS IAM user above mentioned.
+This user is not used by any of the BOSH and PKS operations.
 
 ## What was modified from the above repository
 ```bash
-   cat terraform.tfvars
+cat terraform.tfvars
 ```
 Removed
 ```bash
 access_key         = "access-key-id"
 secret_key         = "secret-access-key"
 ```
+
 ```bash
-   cat main.tf
+cat main.tf
 ```
 Removed
 ```bash
@@ -198,7 +199,7 @@ provider "aws" {
 ```
 
 ```bash
-   cat outputs.tf
+cat outputs.tf
 ```
 Removed
 ```bash
@@ -217,7 +218,7 @@ output "ops_manager_iam_user_secret_key" {
 ```
 
 ```bash
-   cat variables.tf
+cat variables.tf
 ```
 Removed
 ```bash
@@ -225,11 +226,12 @@ variable "access_key" {}
 
 variable "secret_key" {}
 ```
+
 ```bash
-   cat variables.tf
+cat ../modules/opsman/iam.tf
 ```
 Removed
-```bash cat ../modules/opsman/iam.tf
+```bash
 resource "aws_iam_user_policy_attachment" "ops_manager" {
   user       = "${aws_iam_user.ops_manager.name}"
   policy_arn = "${aws_iam_policy.ops_manager_user.arn}"
@@ -245,7 +247,7 @@ resource "aws_iam_access_key" "ops_manager" {
 ```
 
 ```bash
-   cat cat ../modules/opsman/outputs.tf
+cat ../modules/opsman/outputs.tf
 ```
 Removed
 ```bash

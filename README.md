@@ -132,21 +132,10 @@ tags = {
 - ops_manager_instance_type: **(default: m4.large)** Ops Manager instance type
 - ops_manager_private: **(default: false)** Set to true if you want Ops Manager deployed in a private subnet instead of a public subnet
 
-### S3 Buckets (optional) (PAS only)
-- create_backup_pas_buckets: **(default: false)**
-- create_versioned_pas_buckets: **(default: false)**
-
 ### RDS (optional)
 - rds_instance_count: **(default: 0)** Whether or not you would like an RDS for your deployment
 - rds_instance_class: **(default: db.m4.large)** Size of the RDS to deploy
 - rds_db_username: **(default: admin)** Username for RDS authentication
-
-### Isolation Segments (optional)  (PAS only)
-- create_isoseg_resources **(optional)** Set to 1 to create HTTP load-balancer across 3 zones for isolation segments.
-- isoseg_ssl_cert: **(optional)** SSL certificate for Iso Seg HTTP load balancer configuration. Required unless `isoseg_ssl_ca_cert` is specified.
-- isoseg_ssl_private_key: **(optional)** Private key for above SSL certificate. Required unless `isoseg_ssl_ca_cert` is specified.
-- isoseg_ssl_ca_cert: **(optional)** SSL CA certificate used to generate self-signed Iso Seg HTTP load balancer certificate. Required unless `isoseg_ssl_cert` is specified.
-- isoseg_ssl_ca_private_key: **(optional)** Private key for above SSL CA certificate. Required unless `isoseg_ssl_cert` is specified.
 
 ## Notes
 

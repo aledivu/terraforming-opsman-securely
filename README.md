@@ -58,13 +58,11 @@ Create an EC2 Jumpbox and associate the above created IAM Role. For this purpose
 [SSH into your EC2](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html)
 
 ```bash
-sudo su
-yum install unzip
-wget https://releases.hashicorp.com/terraform/0.11.13/terraform_0.11.13_linux_amd64.zip
+sudo yum install unzip
+sudo wget https://releases.hashicorp.com/terraform/0.11.13/terraform_0.11.13_linux_amd64.zip
 unzip terraform_0.11.13_linux_amd64.zip
 sudo mv terraform /usr/bin/
 terraform --version
-sudo su ec2-user
 ```
 
 ## Deploying Ops Manager

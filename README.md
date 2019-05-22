@@ -77,8 +77,8 @@ First, you'll need to clone this repo. Then, depending on if you're deploying PA
 1. Run terraform apply:
   ```bash
   terraform init
-  terraform plan -out=pcf.tfplan
-  terraform apply pcf.tfplan
+  terraform plan
+  terraform apply
   ```
 
 ### Var File

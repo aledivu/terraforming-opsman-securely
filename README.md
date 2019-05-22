@@ -212,7 +212,7 @@ resource "aws_iam_access_key" "ops_manager" {
   user = "${aws_iam_user.ops_manager.name}"
 }
 ```
-In `outputs.tf` under `/modules/opsman` folder, remove
+In `outputs.tf` under `/modules/opsman` folder, remove:
 ```bash
 output "ops_manager_iam_user_name" {
   value = "${aws_iam_user.ops_manager.name}"

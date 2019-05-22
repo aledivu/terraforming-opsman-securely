@@ -166,6 +166,7 @@ Moreover, these terraform scripts create an additional AWS IAM user with high pe
 This user is not used by any of the BOSH and PKS operations.
 
 ## What was modified from the above repository
+In terraform.tfvars
 ```bash
 cat terraform.tfvars
 ```
@@ -174,7 +175,7 @@ Removed
 access_key         = "access-key-id"
 secret_key         = "secret-access-key"
 ```
-
+In main.tf
 ```bash
 cat main.tf
 ```
@@ -185,7 +186,7 @@ provider "aws" {
   secret_key = "${var.secret_key}"
 }
 ```
-
+In outputs.tf
 ```bash
 cat outputs.tf
 ```
@@ -204,7 +205,7 @@ output "ops_manager_iam_user_secret_key" {
   sensitive = true
 }
 ```
-
+In variables.tf
 ```bash
 cat variables.tf
 ```
@@ -214,7 +215,7 @@ variable "access_key" {}
 
 variable "secret_key" {}
 ```
-
+In iam.tf under /modules/opsman folder
 ```bash
 cat ../modules/opsman/iam.tf
 ```
@@ -233,7 +234,7 @@ resource "aws_iam_access_key" "ops_manager" {
   user = "${aws_iam_user.ops_manager.name}"
 }
 ```
-
+In outputs.tf under /modules/opsman folder
 ```bash
 cat ../modules/opsman/outputs.tf
 ```

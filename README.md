@@ -164,31 +164,19 @@ Moreover, these terraform scripts create an additional AWS IAM user with high pe
 This user is not used by any of the BOSH and PKS operations.
 
 ## What was modified from the above repository
-In terraform.tfvars
-```bash
-cat terraform.tfvars
-```
-Removed
+In `terraform.tfvars`, remove:
 ```bash
 access_key         = "access-key-id"
 secret_key         = "secret-access-key"
 ```
-In main.tf
-```bash
-cat main.tf
-```
-Removed
+In `main.tf`, remove:
 ```bash
 provider "aws" {
   access_key = "${var.access_key}"
   secret_key = "${var.secret_key}"
 }
 ```
-In outputs.tf
-```bash
-cat outputs.tf
-```
-Removed
+In `outputs.tf`, remove:
 ```bash
 output "ops_manager_iam_user_name" {
   value = "${module.ops_manager.ops_manager_iam_user_name}"
@@ -203,21 +191,13 @@ output "ops_manager_iam_user_secret_key" {
   sensitive = true
 }
 ```
-In variables.tf
-```bash
-cat variables.tf
-```
-Removed
+In `variables.tf`, remove:
 ```bash
 variable "access_key" {}
 
 variable "secret_key" {}
 ```
-In iam.tf under /modules/opsman folder
-```bash
-cat ../modules/opsman/iam.tf
-```
-Removed
+In `iam.tf` under `/modules/opsman` folder, remove:
 ```bash
 resource "aws_iam_user_policy_attachment" "ops_manager" {
   user       = "${aws_iam_user.ops_manager.name}"
@@ -232,11 +212,7 @@ resource "aws_iam_access_key" "ops_manager" {
   user = "${aws_iam_user.ops_manager.name}"
 }
 ```
-In outputs.tf under /modules/opsman folder
-```bash
-cat ../modules/opsman/outputs.tf
-```
-Removed
+In `outputs.tf` under ``/modules/opsman` folder, remove
 ```bash
 output "ops_manager_iam_user_name" {
   value = "${aws_iam_user.ops_manager.name}"

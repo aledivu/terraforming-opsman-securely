@@ -71,8 +71,7 @@ sudo su ec2-user
 
 First, you'll need to clone this repo. Then, depending on if you're deploying PAS or PKS you need to perform the following steps:
 
-1. `cd` into the proper directory:
-    - [terraforming-pks/](terraforming-pks/)
+1. `cd` into [terraforming-pks/](terraforming-pks/)
 1. Create [`terraform.tfvars`](/README.md#var-file) file
 1. Run terraform apply:
   ```bash

@@ -57,7 +57,9 @@ module "infra" {
 module "ops_manager" {
   source = "../modules/ops_manager"
 
-  subnet_id = "${local.ops_man_subnet_id}"
+  vm_count       = "${var.ops_manager_vm == false ? 0 : (var.ops_manager_ami == "" ? 0 : 1)}"
+  optional_count = "${var.optional_ops_manager ? 1 : 0}"
+  subnet_id      = "${local.ops_man_subnet_id}"
 
   env_name                 = "${var.env_name}"
   region                   = "${var.region}"
@@ -123,4 +125,5 @@ module "rds" {
   vpc_cidr           = "${var.vpc_cidr}"
   vpc_id             = "${module.infra.vpc_id}"
 
-  tags = "${local.actual_tags}
+  tags = "${local.actual_tags}"
+}

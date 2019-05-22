@@ -10,19 +10,12 @@ Set of terraform modules for deploying Ops Manager, PAS and PKS infrastructure r
 - Necessary s3 buckets
 - A NAT Box
 - Network Load Balancers
-- An IAM User with proper permissions
+- An AWS Role with proper permissions
 - Tagged resources
 
 Note: This is not an exhaustive list of resources created, this will vary depending of your arguments and what you're deploying.
 
 ## Prerequisites
-
-### Terraform CLI
-
-```bash
-brew update
-brew install terraform
-```
 
 ### AWS Permissions
 - AmazonEC2FullAccess
@@ -52,14 +45,34 @@ Note: You will also need to create a custom policy as the following and add to
 }
 ```
 
+### Create an AWS Role
+
+Create an AWS Role with the above permissions assigned.
+
+### Deploy a Jumpbox
+
+Create an EC2 Jumpbox and associate the above created IAM Role. For this purpose a Amazon Linux 2 AMI (HVM), SSD Volume Type - ami-030dbca661d402413 (64-bit x86) / ami-08c5dd5d585629c8f (64-bit Arm) was choosen.
+
+### Terraform CLI
+
+[SSH into your EC2] (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html)
+
+```bash
+sudo su
+yum install unzip
+wget https://releases.hashicorp.com/terraform/0.11.13/terraform_0.11.13_linux_amd64.zip
+unzip terraform_0.11.13_linux_amd64.zip
+sudo mv terraform /usr/bin/
+terraform --version
+sudo su ec2-user
+```
+
 ## Deploying Ops Manager
 
 First, you'll need to clone this repo. Then, depending on if you're deploying PAS or PKS you need to perform the following steps:
 
 1. `cd` into the proper directory:
-    - [terraforming-pas/](terraforming-pas/)
     - [terraforming-pks/](terraforming-pks/)
-    - [terraforming-control-plane/](terraforming-control-plane/)
 1. Create [`terraform.tfvars`](/README.md#var-file) file
 1. Run terraform apply:
   ```bash
@@ -76,15 +89,11 @@ You should fill in the stub values with the correct content.
 
 ```hcl
 env_name           = "some-environment-name"
-access_key         = "access-key-id"
-secret_key         = "secret-access-key"
 region             = "us-west-1"
 availability_zones = ["us-west-1a", "us-west-1c"]
 ops_manager_ami    = "ami-4f291f2f"
 rds_instance_count = 1
 dns_suffix         = "example.com"
-vpc_cidr           = "10.0.0.0/16"
-use_route53        = true
 
 ssl_cert = <<EOF
 -----BEGIN CERTIFICATE-----
@@ -107,18 +116,14 @@ tags = {
 ### Variables
 
 - env_name: **(required)** An arbitrary unique name for namespacing resources
-- access_key **(required)** Your Amazon access_key, used for deployment
-- secret_key: **(required)** Your Amazon secret_key, also used for deployment
 - region: **(required)** Region you want to deploy your resources to
 - availability_zones: **(required)** List of AZs you want to deploy to
 - dns_suffix: **(required)** Domain to add environment subdomain to
-- hosted_zone: **(optional)** Parent domain *already* managed by Route53. If specified, the DNS records will be added to this Route53 zone instead of a new zone.
 - ssl_cert: **(optional)** SSL certificate for HTTP load balancer configuration. Required unless `ssl_ca_cert` is specified.
 - ssl_private_key: **(optional)** Private key for above SSL certificate. Required unless `ssl_ca_cert` is specified.
 - ssl_ca_cert: **(optional)** SSL CA certificate used to generate self-signed HTTP load balancer certificate. Required unless `ssl_cert` is specified.
 - ssl_ca_private_key: **(optional)** Private key for above SSL CA certificate. Required unless `ssl_cert` is specified.
 - tags: **(optional)** A map of AWS tags that are applied to the created resources. By default, the following tags are set: Application = Cloud Foundry, Environment = $env_name
-- vpc_cidr: **(default: 10.0.0.0/16)** Internal CIDR block for the AWS VPC.
 
 ### Ops Manager (optional)
 - ops_manager_ami: **(optional)**  Ops Manager AMI, get the right AMI according to your region from the AWS guide downloaded from [Pivotal Network](https://network.pivotal.io/products/ops-manager) (if not provided you get no Ops Manager)
@@ -166,3 +171,94 @@ We have have other terraform templates:
 - [Google Cloud Platform](https://github.com/pivotal-cf/terraforming-gcp)
 - [vSphere](https://github.com/pivotal-cf/terraforming-vsphere)
 - [OpenStack](https://github.com/pivotal-cf/terraforming-openstack)
+
+## What do the terraform scripts create from the above repository?
+As part of deploying OpsMan for PKS, the above repo requires to create an IAM User with high permissions. This user is only used by terraform to access AWS, so this is not necessary if you run these terraform from a Jumpbox in AWS. If you do use a AWS IAM user, then make sure to rotate access key and secret key often as a good way to secure your AWS account.
+Moreover, these terraform scripts create an additional AWS IAM user with high permissions. This user is only created for the purpose of allowing AWS Management Console Config option of Using AWS Keys. Recommendation is to follow [Pivotal Network] (https://docs.pivotal.io/pivotalcf/2-5/om/aws/config-terraform.html) suggesting to Use AWS Instance Profile instead of the AWS IAM user above mentioned.
+This user is not used by any of the BOSH and PKS operations. 
+
+## What was modified from the above repository
+```bash
+   cat terraform.tfvars
+```
+Removed
+```bash
+access_key         = "access-key-id"
+secret_key         = "secret-access-key"
+```
+```bash
+   cat main.tf
+```
+Removed
+```bash
+provider "aws" {
+  access_key = "${var.access_key}"
+  secret_key = "${var.secret_key}"
+}
+```
+
+```bash
+   cat outputs.tf
+```
+Removed
+```bash
+output "ops_manager_iam_user_name" {
+  value = "${module.ops_manager.ops_manager_iam_user_name}"
+}
+
+output "ops_manager_iam_user_access_key" {
+  value = "${module.ops_manager.ops_manager_iam_user_access_key}"
+}
+
+output "ops_manager_iam_user_secret_key" {
+  value     = "${module.ops_manager.ops_manager_iam_user_secret_key}"
+  sensitive = true
+}
+```
+
+```bash
+   cat variables.tf
+```
+Removed
+```bash
+variable "access_key" {}
+
+variable "secret_key" {}
+```
+```bash
+   cat variables.tf
+```
+Removed
+```bash cat ../modules/opsman/iam.tf
+resource "aws_iam_user_policy_attachment" "ops_manager" {
+  user       = "${aws_iam_user.ops_manager.name}"
+  policy_arn = "${aws_iam_policy.ops_manager_user.arn}"
+}
+
+resource "aws_iam_user" "ops_manager" {
+  name = "${var.env_name}_om_user"
+}
+
+resource "aws_iam_access_key" "ops_manager" {
+  user = "${aws_iam_user.ops_manager.name}"
+}
+```
+
+```bash
+   cat cat ../modules/opsman/outputs.tf
+```
+Removed
+```bash
+output "ops_manager_iam_user_name" {
+  value = "${aws_iam_user.ops_manager.name}"
+}
+
+output "ops_manager_iam_user_access_key" {
+  value = "${aws_iam_access_key.ops_manager.id}"
+}
+
+output "ops_manager_iam_user_secret_key" {
+  value     = "${aws_iam_access_key.ops_manager.secret}"
+  sensitive = true
+}
+```

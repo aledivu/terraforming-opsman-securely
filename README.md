@@ -15,9 +15,9 @@ Set of terraform modules for deploying Ops Manager and PKS infrastructure requir
 
 Note: This is not an exhaustive list of resources created, this will vary depending of your arguments and what you're deploying.
 
-This is to tighten the security of the original [terraform scripts][https://github.com/pivotal-cf/terraforming-aws] in two ways:
-- Enabling terraform scripts to use EC2 Roles instead of IAM Users [modified parts][https://github.com/aledivu/terraforming-opsman-securely#ec2-roles-instead-of-iam-users]
-- Deploying OpsMan in a private subnet [modified parts][https://github.com/aledivu/terraforming-opsman-securely#opsman-in-private-subnet].
+This is to tighten the security of the original [terraform scripts](https://github.com/pivotal-cf/terraforming-aws) in two ways:
+- Enabling terraform scripts to use EC2 Roles instead of IAM Users [modified parts](https://github.com/aledivu/terraforming-opsman-securely#ec2-roles-instead-of-iam-users)
+- Deploying OpsMan in a private subnet [modified parts](https://github.com/aledivu/terraforming-opsman-securely#opsman-in-private-subnet).
 
 ## Prerequisites
 
@@ -194,7 +194,7 @@ variable "access_key" {}
 
 variable "secret_key" {}
 ```
-In `/modules/ops_manager/iam.tf`, remove:
+In `modules/ops_manager/iam.tf`, remove:
 ```bash
 resource "aws_iam_user_policy_attachment" "ops_manager" {
   user       = "${aws_iam_user.ops_manager.name}"
@@ -209,7 +209,7 @@ resource "aws_iam_access_key" "ops_manager" {
   user = "${aws_iam_user.ops_manager.name}"
 }
 ```
-In `/modules/opsman/outputs.tf`, remove:
+In `modules/opsman/outputs.tf`, remove:
 ```bash
 output "ops_manager_iam_user_name" {
   value = "${aws_iam_user.ops_manager.name}"
@@ -232,7 +232,7 @@ variable "ops_manager_private" {
   description = "If true, the Ops Manager will be colocated with the BOSH director on the infrastructure subnet instead of on the public subnet"
 }
 ```
-In `/modules/ops_manager/`, create `lb.tf`:
+In `modules/ops_manager/`, create `lb.tf`:
 ```bash
 resource "aws_lb_listener" "ops_man_443" {
   load_balancer_arn = "${aws_lb.ops_man.arn}"
@@ -272,11 +272,11 @@ variable "public_subnet_ids" {
   type = "list"
 }
 ```
-In `/modules/ops_manager/main.tf`, add:
+In `modules/ops_manager/main.tf`, add:
 ```bash
   public_subnet_ids       = "${module.infra.public_subnet_ids}"
 ```
-In `/modules/ops_manager/dns.tf`, add:
+In `modules/ops_manager/dns.tf`, add:
 ```bash
 resource "aws_route53_record" "ops_manager_attached_eip" {
   name    = "pcf.${var.env_name}.${var.dns_suffix}"
@@ -311,7 +311,7 @@ resource "aws_route53_record" "optional_ops_manager" {
   records = ["${coalesce(join("", aws_eip.optional_ops_manager.*.public_ip), aws_instance.optional_ops_manager.private_ip)}"]
 }
 ```
-In `/modules/ops_manager/security_group.tf`, change:
+In `modules/ops_manager/security_group.tf`, change:
 
 ```bash
 cidr_blocks = ["0.0.0.0/0"]

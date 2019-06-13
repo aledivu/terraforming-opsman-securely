@@ -1,8 +1,8 @@
-# Terraforming AWS [![build-status](https://infra.ci.cf-app.com/api/v1/teams/main/pipelines/terraforming-aws/jobs/deploy-pas/badge)](https://infra.ci.cf-app.com/teams/main/pipelines/terraforming-aws)
+# Terraforming AWS
 
 ## What is this?
 
-Set of terraform modules for deploying Ops Manager, PAS and PKS infrastructure requirements like:
+Set of terraform modules for deploying Ops Manager and PKS infrastructure requirements like:
 
 - Friendly DNS entries in Route53
 - A RDS instance (optional)
@@ -14,6 +14,10 @@ Set of terraform modules for deploying Ops Manager, PAS and PKS infrastructure r
 - Tagged resources
 
 Note: This is not an exhaustive list of resources created, this will vary depending of your arguments and what you're deploying.
+
+This is to tighten the security of the original [terraform scripts][terraform scripts][https://github.com/pivotal-cf/terraforming-aws] in two ways:
+- Enabling terraform scripts to use EC2 Roles instead of IAM Users [modified parts][https://github.com/aledivu/terraforming-opsman-securely/README.md#ec2-roles-instead-of-iam-users]
+- Deploying OpsMan in a private subnet[modified parts][https://github.com/aledivu/terraforming-opsman-securely/README.md#opsman-in-private-subnet].
 
 ## Prerequisites
 
@@ -84,7 +88,7 @@ Copy the stub content below into a file called `terraform.tfvars` and put it in 
 These vars will be used when you run `terraform apply`.
 You should fill in the stub values with the correct content.
 
-```hcl
+```bash
 env_name           = "some-environment-name"
 region             = "us-west-1"
 availability_zones = ["us-west-1a", "us-west-1c"]
@@ -149,21 +153,14 @@ Note: RDS instances take a long time to deploy, keep that in mind. They're not r
 terraform destroy
 ```
 
-## Looking to setup a different IaaS
-
-We have have other terraform templates:
-
-- [Azure](https://github.com/pivotal-cf/terraforming-azure)
-- [Google Cloud Platform](https://github.com/pivotal-cf/terraforming-gcp)
-- [vSphere](https://github.com/pivotal-cf/terraforming-vsphere)
-- [OpenStack](https://github.com/pivotal-cf/terraforming-openstack)
-
 ## What do the terraform scripts create from the above repository?
 As part of deploying OpsMan for PKS, the above repo requires to create an IAM User with high permissions. This user is only used by terraform to access AWS, so this is not necessary if you run these terraform from a Jumpbox in AWS. If you do use a AWS IAM user, then make sure to rotate access key and secret key often as a good way to secure your AWS account.
 Moreover, these terraform scripts create an additional AWS IAM user with high permissions. This user is only created for the purpose of allowing AWS Management Console Config option of Using AWS Keys. Recommendation is to follow [Pivotal Network](https://docs.pivotal.io/pivotalcf/2-5/om/aws/config-terraform.html) suggesting to Use AWS Instance Profile instead of the AWS IAM user above mentioned.
 This user is not used by any of the BOSH and PKS operations.
 
 ## What was modified from the above repository
+### EC2 Roles instead of IAM Users
+
 In `terraform.tfvars`, remove:
 ```bash
 access_key         = "access-key-id"
@@ -197,7 +194,7 @@ variable "access_key" {}
 
 variable "secret_key" {}
 ```
-In `iam.tf` under `/modules/opsman` folder, remove:
+In `/modules/ops_manager/iam.tf`, remove:
 ```bash
 resource "aws_iam_user_policy_attachment" "ops_manager" {
   user       = "${aws_iam_user.ops_manager.name}"
@@ -212,7 +209,7 @@ resource "aws_iam_access_key" "ops_manager" {
   user = "${aws_iam_user.ops_manager.name}"
 }
 ```
-In `outputs.tf` under `/modules/opsman` folder, remove:
+In `/modules/opsman/outputs.tf`, remove:
 ```bash
 output "ops_manager_iam_user_name" {
   value = "${aws_iam_user.ops_manager.name}"
@@ -226,4 +223,96 @@ output "ops_manager_iam_user_secret_key" {
   value     = "${aws_iam_access_key.ops_manager.secret}"
   sensitive = true
 }
+```
+### OpsMan in private subnet
+In `variable.tf`, set `default` to `true`:
+```bash
+variable "ops_manager_private" {
+  default     = true
+  description = "If true, the Ops Manager will be colocated with the BOSH director on the infrastructure subnet instead of on the public subnet"
+}
+```
+In '/modules/ops_manager/', create 'lb.tf':
+```bash
+resource "aws_lb_listener" "ops_man_443" {
+  load_balancer_arn = "${aws_lb.ops_man.arn}"
+  port              = 443
+  protocol          = "TCP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = "${aws_lb_target_group.ops_man_443.arn}"
+  }
+}
+
+resource "aws_lb_target_group" "ops_man_443" {
+  name     = "${var.env_name}-ops-man-tg-443"
+  port     = 443
+  protocol = "TCP"
+  vpc_id   = "${var.vpc_id}"
+
+  health_check {
+    healthy_threshold   = 6
+    unhealthy_threshold = 6
+    interval            = 10
+    protocol            = "TCP"
+  }
+}
+
+resource "aws_lb_target_group_attachment" "ops_man_443" {
+  target_group_arn = "${aws_lb_target_group.ops_man_443.arn}"
+  target_id        = "${aws_instance.ops_manager.id}"
+  port             = 443
+}
+```
+
+In `modules/ops_manager/variable.tf`, add:
+```bash
+variable "public_subnet_ids" {
+  type = "list"
+}
+```
+In `/modules/ops_manager/main.tf`, add:
+```bash
+  public_subnet_ids       = "${module.infra.public_subnet_ids}"
+```
+In `/modules/ops_manager/dns.tf`, add:
+```bash
+resource "aws_route53_record" "ops_manager_attached_eip" {
+  name    = "pcf.${var.env_name}.${var.dns_suffix}"
+  zone_id = "${var.zone_id}"
+  type    = "A"
+  ttl     = 300
+  count   = "${var.use_route53 ? var.vm_count : 0}"
+
+  records = ["${coalesce(join("", aws_eip.ops_manager_attached.*.public_ip), aws_instance.ops_manager.private_ip)}"]
+}
+
+resource "aws_route53_record" "ops_manager_unattached_eip" {
+  name    = "pcf.${var.env_name}.${var.dns_suffix}"
+  zone_id = "${var.zone_id}"
+  type    = "A"
+   count   = "${var.use_route53 && (var.vm_count < 1) ? 1 : 0}"
+
+  alias {
+    name                   = "${aws_lb.ops_man.dns_name}"
+    zone_id                = "${aws_lb.ops_man.zone_id}"
+    evaluate_target_health = true
+}
+}
+
+resource "aws_route53_record" "optional_ops_manager" {
+  name    = "pcf-optional.${var.env_name}.${var.dns_suffix}"
+  zone_id = "${var.zone_id}"
+  type    = "A"
+  ttl     = 300
+  count   = "${var.use_route53 ? var.optional_count : 0}"
+
+  records = ["${coalesce(join("", aws_eip.optional_ops_manager.*.public_ip), aws_instance.optional_ops_manager.private_ip)}"]
+}
+```
+In `/modules/ops_manager/security_group.tf`, change:
+
+```bash
+cidr_blocks = ["0.0.0.0/0"]
 ```

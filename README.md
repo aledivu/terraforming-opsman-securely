@@ -235,7 +235,7 @@ variable "ops_manager_private" {
 
 In `main.tf`, under the ops_manager section add:
 ```bash
-  public_subnet_ids       = "${module.infra.public_subnet_ids}"
+public_subnet_ids       = "${module.infra.public_subnet_ids}"
 ```
 
 In `modules/ops_manager/`, create `lb.tf`:

@@ -232,6 +232,12 @@ variable "ops_manager_private" {
   description = "If true, the Ops Manager will be colocated with the BOSH director on the infrastructure subnet instead of on the public subnet"
 }
 ```
+
+In `main.tf`, under the ops_manager section add:
+```bash
+  public_subnet_ids       = "${module.infra.public_subnet_ids}"
+```
+
 In `modules/ops_manager/`, create `lb.tf`:
 ```bash
 resource "aws_lb_listener" "ops_man_443" {
@@ -272,10 +278,7 @@ variable "public_subnet_ids" {
   type = "list"
 }
 ```
-In `modules/ops_manager/main.tf`, add:
-```bash
-  public_subnet_ids       = "${module.infra.public_subnet_ids}"
-```
+
 In `modules/ops_manager/dns.tf`, add:
 ```bash
 resource "aws_route53_record" "ops_manager_attached_eip" {

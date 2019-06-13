@@ -161,19 +161,19 @@ This user is not used by any of the BOSH and PKS operations.
 ## What was modified from the above repository
 ### EC2 Roles instead of IAM Users
 
-In `terraform.tfvars`, remove:
+In `terraforming-pks/terraform.tfvars`, remove:
 ```bash
 access_key         = "access-key-id"
 secret_key         = "secret-access-key"
 ```
-In `main.tf`, remove:
+In `terraforming-pks/main.tf`, remove:
 ```bash
 provider "aws" {
   access_key = "${var.access_key}"
   secret_key = "${var.secret_key}"
 }
 ```
-In `outputs.tf`, remove:
+In `terraforming-pks/outputs.tf`, remove:
 ```bash
 output "ops_manager_iam_user_name" {
   value = "${module.ops_manager.ops_manager_iam_user_name}"
@@ -188,7 +188,7 @@ output "ops_manager_iam_user_secret_key" {
   sensitive = true
 }
 ```
-In `variables.tf`, remove:
+In `terraforming-pks/variables.tf`, remove:
 ```bash
 variable "access_key" {}
 
@@ -225,7 +225,7 @@ output "ops_manager_iam_user_secret_key" {
 }
 ```
 ### OpsMan in private subnet
-In `variable.tf`, set:
+In `terraforming-pks/variable.tf`, set:
 ```bash
 variable "ops_manager_private" {
   default     = true
@@ -233,7 +233,7 @@ variable "ops_manager_private" {
 }
 ```
 
-In `main.tf`, under the ops_manager section add:
+In `terraforming-pks/main.tf`, under the `module ops_manager` section, add:
 ```bash
 public_subnet_ids       = "${module.infra.public_subnet_ids}"
 ```

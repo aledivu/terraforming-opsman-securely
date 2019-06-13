@@ -16,8 +16,8 @@ Set of terraform modules for deploying Ops Manager and PKS infrastructure requir
 Note: This is not an exhaustive list of resources created, this will vary depending of your arguments and what you're deploying.
 
 This is to tighten the security of the original [terraform scripts](https://github.com/pivotal-cf/terraforming-aws) in two ways:
-- Enabling terraform scripts to use EC2 Roles instead of IAM Users [modified parts](https://github.com/aledivu/terraforming-opsman-securely#ec2-roles-instead-of-iam-users)
-- Deploying OpsMan in a private subnet [modified parts](https://github.com/aledivu/terraforming-opsman-securely#opsman-in-private-subnet).
+- Enabling terraform scripts to use EC2 Roles instead of IAM Users - [modified sections](https://github.com/aledivu/terraforming-opsman-securely#ec2-roles-instead-of-iam-users)
+- Deploying OpsMan in a private subnet - [modified sections](https://github.com/aledivu/terraforming-opsman-securely#opsman-in-private-subnet).
 
 ## Prerequisites
 

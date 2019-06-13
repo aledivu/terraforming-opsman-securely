@@ -15,9 +15,9 @@ Set of terraform modules for deploying Ops Manager and PKS infrastructure requir
 
 Note: This is not an exhaustive list of resources created, this will vary depending of your arguments and what you're deploying.
 
-This is to tighten the security of the original [terraform scripts][terraform scripts][https://github.com/pivotal-cf/terraforming-aws] in two ways:
-- Enabling terraform scripts to use EC2 Roles instead of IAM Users [modified parts][https://github.com/aledivu/terraforming-opsman-securely/README.md#ec2-roles-instead-of-iam-users]
-- Deploying OpsMan in a private subnet[modified parts][https://github.com/aledivu/terraforming-opsman-securely/README.md#opsman-in-private-subnet].
+This is to tighten the security of the original [terraform scripts][https://github.com/pivotal-cf/terraforming-aws] in two ways:
+- Enabling terraform scripts to use EC2 Roles instead of IAM Users [modified parts][https://github.com/aledivu/terraforming-opsman-securely#ec2-roles-instead-of-iam-users]
+- Deploying OpsMan in a private subnet [modified parts][https://github.com/aledivu/terraforming-opsman-securely#opsman-in-private-subnet].
 
 ## Prerequisites
 
@@ -225,14 +225,14 @@ output "ops_manager_iam_user_secret_key" {
 }
 ```
 ### OpsMan in private subnet
-In `variable.tf`, set `default` to `true`:
+In `variable.tf`, set:
 ```bash
 variable "ops_manager_private" {
   default     = true
   description = "If true, the Ops Manager will be colocated with the BOSH director on the infrastructure subnet instead of on the public subnet"
 }
 ```
-In '/modules/ops_manager/', create 'lb.tf':
+In `/modules/ops_manager/`, create `lb.tf`:
 ```bash
 resource "aws_lb_listener" "ops_man_443" {
   load_balancer_arn = "${aws_lb.ops_man.arn}"

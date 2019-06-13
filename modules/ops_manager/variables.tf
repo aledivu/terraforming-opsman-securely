@@ -2,6 +2,10 @@ variable "region" {
   type = "string"
 }
 
+variable "public_subnet_ids" {
+  type = "list"
+}
+
 variable "optional_count" {}
 
 variable "vm_count" {}
